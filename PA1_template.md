@@ -16,22 +16,22 @@ steps_df = read.csv("activity.csv")
 
 ## What is mean total number of steps taken per day?
 
-We create a histogram of the steps taken by per day.
+We start with a histogram of the steps taken by per day.
 
 
 ```r
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day", 
-    xlab = "Steps")
+steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)$x
+hist(steps_by_day, breaks = 20, main = "Total steps taken each day", xlab = "Total Steps")
 ```
 
 ![plot of chunk Histogram](figure/Histogram.png) 
 
 
+And then compute the mean and median:
+
 
 ```r
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-mean(steps_by_day$x, na.rm = TRUE)
+mean(steps_by_day, na.rm = TRUE)
 ```
 
 ```
@@ -41,7 +41,7 @@ mean(steps_by_day$x, na.rm = TRUE)
 
 
 ```r
-median(steps_by_day$x, na.rm = TRUE)
+median(steps_by_day, na.rm = TRUE)
 ```
 
 ```
@@ -52,14 +52,30 @@ median(steps_by_day$x, na.rm = TRUE)
 
 ## What is the average daily activity pattern?
 
+We take the mean for each interval across all days and then create a times series plot of
+the averages for each interval.
+
 
 ```r
 steps_by_interval = aggregate(. ~ interval, data = steps_df, mean)
-plot(steps_by_interval$steps, type = "l", main = "Time Series Plot of 5-Min Intervals")
+plot(steps_by_interval$steps, type = "l", ylab = "Avg Number of Steps", xlab = "5-min Interval", 
+    main = "Time Series Plot of 5-Min Intervals")
 ```
 
 ![plot of chunk TimeSeries](figure/TimeSeries.png) 
 
+
+We then find the 5-min interval that, on average, contains the maximum number of steps.
+
+
+```r
+max_steps = max(steps_by_interval$steps)
+max_steps_interval = steps_by_interval[steps_by_interval$steps == max_steps, 
+    ]$interval
+```
+
+
+**Interval 835** is the interval with the most steps on average with **206.1698 steps**.
 
 ## Imputing missing values
 
@@ -73,57 +89,74 @@ num_rows_na = num_rows - num_rows_not_na
 
 The dataset has 17568 rows, of which 2304 have NAs.
 
+We will fill each in with the mean for that day.  If there is no mean (ie, we have no data at all for that day), then use mean for the whole dataset.
 
-## Filling in Missing Values 
-
-Fill in all missing values in the dataset with mean for an interval that day.  If there is no mean (no data at all for that day), then use mean for the whole dataset.
+Our assumption is that activity levels usually follow a daily pattern so the mean for the day is a reasonable guess for the activity level of a missing interval on that day.  If we have no data for that day, using the mean for whole dataset is a better standin than using 0.  This approach has the benefit of being easy to understand and explain, and easy to implement.
 
 
 ```r
 
 dataset_mean <- mean(steps_df$steps, na.rm = TRUE)
-for (cur_date in unique(steps_df$date)) {
-    replace_val <- mean(steps_df$steps[steps_df$date == cur_date], na.rm = TRUE)
+imputed_df <- data.frame(steps_df)
+for (cur_date in unique(imputed_df$date)) {
+    replace_val <- mean(imputed_df$steps[imputed_df$date == cur_date], na.rm = TRUE)
     if (is.nan(replace_val)) {
+        # No mean for the day
         replace_val = dataset_mean
     }
-    steps_df$steps[steps_df$date == cur_date & is.na(steps_df$steps)] <- replace_val
+    imputed_df$steps[imputed_df$date == cur_date & is.na(imputed_df$steps)] <- replace_val
 }
 ```
 
 
 
-```r
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day")
-```
-
-![plot of chunk FilledInHistogram](figure/FilledInHistogram.png) 
-
-
 
 ```r
-num_rows = length(steps_df$interval)
-num_rows_not_na = length(na.omit(steps_df)$interval)
+num_rows = length(imputed_df$interval)
+num_rows_not_na = length(na.omit(imputed_df)$interval)
 num_rows_na = num_rows - num_rows_not_na
 ```
 
 
-Dataset with NAs filled in 17568 rows, of which 0 have NAs.
+Dataset with NAs filled in has 17568 rows, of which 0 have NAs.
 
-Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+We then compare this new dataset with the imputed data to our original by creating a histogram and computing the mean and median as we did earlier.
 
-FINISH ME
 
 
 ```r
-steps_df = read.csv("activity.csv")
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day, with filled in data")
+steps_by_day_imputed = aggregate(imputed_df$steps, list(data = imputed_df$date), 
+    sum)$x
+hist(steps_by_day_imputed, breaks = 20, main = "Histogram: Total steps taken each day, with imputed data", 
+    xlab = "Total Steps")
 ```
 
-![plot of chunk HistogramFilledIn](figure/HistogramFilledIn.png) 
+![plot of chunk HistogramImputed](figure/HistogramImputed.png) 
 
+
+And then compute the mean and median for this new dataset:
+
+
+```r
+mean(steps_by_day_imputed)
+```
+
+```
+## [1] 10766
+```
+
+
+
+```r
+median(steps_by_day_imputed)
+```
+
+```
+## [1] 10766
+```
+
+
+The mean and median are almost exactly the same and the general pattern of the data remains unchanged, although the imputed dataset has significantly more days with 10,000 steps. For future work, it may be worth examining more sophisticated ways of imputed the data, perhaps by taking time of day into account.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
