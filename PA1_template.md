@@ -8,115 +8,144 @@ This is an analysis of data from a personal activity monitoring device.  The dev
 
 ## Loading and preprocessing the data
 
-```{r Histogram}
-steps_df = read.csv('activity.csv')
+
+```r
+steps_df = read.csv("activity.csv")
 ```
+
 
 ## What is mean total number of steps taken per day?
 
-```{r Histogram}
+
+```r
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day')
+hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day")
 ```
 
-```{r Mean and Media Total Steps Per Day}
+![plot of chunk Histogram](figure/Histogram.png) 
+
+
+
+```r
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
 steps_mean = mean(steps_by_day$x, na.rm = TRUE)
 steps_median = median(steps_by_day$x, na.rm = TRUE)
 ```
 
-Mean total steps per day: `r steps_mean`
-Median total steps per day: `r steps_median`
+
+Mean total steps per day: 1.0766 &times; 10<sup>4</sup>
+Median total steps per day: 10765
 
 
 ## What is the average daily activity pattern?
 
-```{r Time Series}
+
+```r
 steps_by_interval = aggregate(. ~ interval, data = steps_df, mean)
-plot(steps_by_interval$steps, type="l",
-     main="Time Series Plot of 5-Min Intervals")
+plot(steps_by_interval$steps, type = "l", main = "Time Series Plot of 5-Min Intervals")
 ```
+
+![plot of chunk TimeSeries](figure/TimeSeries.png) 
+
 
 ## Imputing missing values
 
-```{r Count Missing Values}
+
+```r
 num_rows = length(steps_df$interval)
 num_rows_not_na = length(na.omit(steps_df)$interval)
 num_rows_na = num_rows - num_rows_not_na
 ```
 
-The dataset has `r num_rows` rows, of which `r num_rows_na` have NAs.
+
+The dataset has 17568 rows, of which 2304 have NAs.
 
 
 ## Filling in Missing Values 
 
 Fill in all missing values in the dataset with mean for an interval that day.  If there is no mean (no data at all for that day), then use mean for the whole dataset.
 
-```{r Fill in Missing Values}
 
-dataset_mean <- mean(steps_df$steps, na.rm=TRUE)
+```r
+
+dataset_mean <- mean(steps_df$steps, na.rm = TRUE)
 for (cur_date in unique(steps_df$date)) {
-  replace_val <- mean(steps_df$steps[steps_df$date==cur_date], na.rm=TRUE)
-  if (is.nan(replace_val)) {
-      replace_val = dataset_mean
-  }
-  steps_df$steps[steps_df$date == cur_date & is.na(steps_df$steps)] <- replace_val
+    replace_val <- mean(steps_df$steps[steps_df$date == cur_date], na.rm = TRUE)
+    if (is.nan(replace_val)) {
+        replace_val = dataset_mean
+    }
+    steps_df$steps[steps_df$date == cur_date & is.na(steps_df$steps)] <- replace_val
 }
-
 ```
 
-```{r Filled-in Histogram}
+
+
+```r
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day')
+hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day")
 ```
 
-```{r Count Missing Values Again}
+![plot of chunk FilledInHistogram](figure/FilledInHistogram.png) 
+
+
+
+```r
 num_rows = length(steps_df$interval)
 num_rows_not_na = length(na.omit(steps_df)$interval)
 num_rows_na = num_rows - num_rows_not_na
 ```
 
-Dataset with NAs filled in `r num_rows` rows, of which `r num_rows_na` have NAs.
+
+Dataset with NAs filled in 17568 rows, of which 0 have NAs.
 
 Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 FINISH ME
 
-```{r Histogram Filled In Data}
-steps_df = read.csv('activity.csv')
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day, with filled in data')
 
+```r
+steps_df = read.csv("activity.csv")
+steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
+hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day, with filled in data")
 ```
+
+![plot of chunk HistogramFilledIn](figure/HistogramFilledIn.png) 
+
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 First we create a factor variable *weekday* to store the day-of-week for the given interval.
 
-```{r Weekdays V Weekends}
-steps_df$day_of_week <- weekdays(as.Date(steps_df$date, '%Y-%m-%d'))
-steps_df$weekday <- ifelse (steps_df$day_of_week == 'Saturday' | steps_df$day_of_week == 'Sunday',
-                            'Weekend', 'Weekday')  
+
+```r
+steps_df$day_of_week <- weekdays(as.Date(steps_df$date, "%Y-%m-%d"))
+steps_df$weekday <- ifelse(steps_df$day_of_week == "Saturday" | steps_df$day_of_week == 
+    "Sunday", "Weekend", "Weekday")
 ```
+
 
 
 Plot of a 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-```{r Plot: Weekday}
 
-par(mfrow=c(2,1))
+```r
 
-steps_weekday_df = steps_df[steps_df$weekday=='Weekday',]
-steps_by_interval_weekday = aggregate(steps_weekday_df$steps ~ steps_weekday_df$interval,
-                                      data = steps_weekday_df, sum)
-plot(steps_by_interval_weekday,type="l", main="Weekday")
+par(mfrow = c(2, 1))
 
-steps_weekend_df = steps_df[steps_df$weekday=='Weekend',]
-steps_by_interval_weekend = aggregate(steps_weekend_df$steps ~ steps_weekend_df$interval,
-                                      data = steps_weekend_df, sum)
-plot(steps_by_interval_weekend,type="l", main="Weekend")
+steps_weekday_df = steps_df[steps_df$weekday == "Weekday", ]
+steps_by_interval_weekday = aggregate(steps_weekday_df$steps ~ steps_weekday_df$interval, 
+    data = steps_weekday_df, sum)
+plot(steps_by_interval_weekday, type = "l", main = "Weekday")
+
+steps_weekend_df = steps_df[steps_df$weekday == "Weekend", ]
+steps_by_interval_weekend = aggregate(steps_weekend_df$steps ~ steps_weekend_df$interval, 
+    data = steps_weekend_df, sum)
+plot(steps_by_interval_weekend, type = "l", main = "Weekend")
 ```
+
+![plot of chunk PlotWeekdayWeekend](figure/PlotWeekdayWeekend.png) 
+
 
 
 
