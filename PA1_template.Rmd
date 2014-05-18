@@ -8,30 +8,34 @@ This is an analysis of data from a personal activity monitoring device.  The dev
 
 ## Loading and preprocessing the data
 
-```{r Histogram}
+```{r LoadData}
 steps_df = read.csv('activity.csv')
 ```
 
 ## What is mean total number of steps taken per day?
 
+We create a histogram of the steps taken by per day.
+
 ```{r Histogram}
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day')
+steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)$x
+hist(steps_by_day, breaks=20, main='Histogram: Total steps taken each day',
+     xlab='Steps')
 ```
 
-```{r Mean and Media Total Steps Per Day}
-steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-steps_mean = mean(steps_by_day$x, na.rm = TRUE)
-steps_median = median(steps_by_day$x, na.rm = TRUE)
+And then compute the mean and median.
+
+```{r MeanSteps, echo=TRUE}
+mean(steps_by_day, na.rm = TRUE)
 ```
 
-Mean total steps per day: `r steps_mean`
-Median total steps per day: `r steps_median`
+```{r MedianSteps, echo=TRUE}
+median(steps_by_day, na.rm = TRUE)
+```
 
 
 ## What is the average daily activity pattern?
 
-```{r Time Series}
+```{r TimeSeries}
 steps_by_interval = aggregate(. ~ interval, data = steps_df, mean)
 plot(steps_by_interval$steps, type="l",
      main="Time Series Plot of 5-Min Intervals")
@@ -39,7 +43,7 @@ plot(steps_by_interval$steps, type="l",
 
 ## Imputing missing values
 
-```{r Count Missing Values}
+```{r CountMissingValues}
 num_rows = length(steps_df$interval)
 num_rows_not_na = length(na.omit(steps_df)$interval)
 num_rows_na = num_rows - num_rows_not_na
@@ -52,7 +56,7 @@ The dataset has `r num_rows` rows, of which `r num_rows_na` have NAs.
 
 Fill in all missing values in the dataset with mean for an interval that day.  If there is no mean (no data at all for that day), then use mean for the whole dataset.
 
-```{r Fill in Missing Values}
+```{r FillinMissingValues}
 
 dataset_mean <- mean(steps_df$steps, na.rm=TRUE)
 for (cur_date in unique(steps_df$date)) {
@@ -65,12 +69,12 @@ for (cur_date in unique(steps_df$date)) {
 
 ```
 
-```{r Filled-in Histogram}
+```{r FilledInHistogram}
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
 hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day')
 ```
 
-```{r Count Missing Values Again}
+```{r CountMissingValues2}
 num_rows = length(steps_df$interval)
 num_rows_not_na = length(na.omit(steps_df)$interval)
 num_rows_na = num_rows - num_rows_not_na
@@ -82,7 +86,7 @@ Make a histogram of the total number of steps taken each day and Calculate and r
 
 FINISH ME
 
-```{r Histogram Filled In Data}
+```{r HistogramFilledIn}
 steps_df = read.csv('activity.csv')
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
 hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day, with filled in data')
@@ -92,30 +96,32 @@ hist(steps_by_day$x, breaks=20, main='Histogram: Total steps taken each day, wit
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-First we create a factor variable *weekday* to store the day-of-week for the given interval.
+First we create a factor variable *weekday* to store the day-of-week for the given interval which 
+stores either *Weekend* or *Weekday* for each row.
 
-```{r Weekdays V Weekends}
+```{r WeekdaysVWeekends}
 steps_df$day_of_week <- weekdays(as.Date(steps_df$date, '%Y-%m-%d'))
 steps_df$weekday <- ifelse (steps_df$day_of_week == 'Saturday' | steps_df$day_of_week == 'Sunday',
                             'Weekend', 'Weekday')  
 ```
 
+We can then create a plot of a 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-Plot of a 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
-
-```{r Plot: Weekday}
+```{r PlotWeekdayWeekend}
 
 par(mfrow=c(2,1))
 
 steps_weekday_df = steps_df[steps_df$weekday=='Weekday',]
 steps_by_interval_weekday = aggregate(steps_weekday_df$steps ~ steps_weekday_df$interval,
                                       data = steps_weekday_df, sum)
-plot(steps_by_interval_weekday,type="l", main="Weekday")
+plot(steps_by_interval_weekday, type="l", main="Weekday",
+     ylab="Steps", xlab="", col="blue")
 
 steps_weekend_df = steps_df[steps_df$weekday=='Weekend',]
 steps_by_interval_weekend = aggregate(steps_weekend_df$steps ~ steps_weekend_df$interval,
                                       data = steps_weekend_df, sum)
-plot(steps_by_interval_weekend,type="l", main="Weekend")
+plot(steps_by_interval_weekend, type="l", main="Weekend",
+      ylab="Steps", xlab="", col="blue")
 ```
 
 

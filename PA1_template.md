@@ -16,10 +16,13 @@ steps_df = read.csv("activity.csv")
 
 ## What is mean total number of steps taken per day?
 
+We create a histogram of the steps taken by per day.
+
 
 ```r
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day")
+hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day", 
+    xlab = "Steps")
 ```
 
 ![plot of chunk Histogram](figure/Histogram.png) 
@@ -28,13 +31,23 @@ hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day"
 
 ```r
 steps_by_day = aggregate(steps_df$steps, list(data = steps_df$date), sum)
-steps_mean = mean(steps_by_day$x, na.rm = TRUE)
-steps_median = median(steps_by_day$x, na.rm = TRUE)
+mean(steps_by_day$x, na.rm = TRUE)
+```
+
+```
+## [1] 10766
 ```
 
 
-Mean total steps per day: 1.0766 &times; 10<sup>4</sup>
-Median total steps per day: 10765
+
+```r
+median(steps_by_day$x, na.rm = TRUE)
+```
+
+```
+## [1] 10765
+```
+
 
 
 ## What is the average daily activity pattern?
@@ -115,7 +128,8 @@ hist(steps_by_day$x, breaks = 20, main = "Histogram: Total steps taken each day,
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-First we create a factor variable *weekday* to store the day-of-week for the given interval.
+First we create a factor variable *weekday* to store the day-of-week for the given interval which 
+stores either *Weekend* or *Weekday* for each row.
 
 
 ```r
@@ -125,8 +139,7 @@ steps_df$weekday <- ifelse(steps_df$day_of_week == "Saturday" | steps_df$day_of_
 ```
 
 
-
-Plot of a 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+We can then create a plot of a 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
 
 ```r
@@ -136,12 +149,14 @@ par(mfrow = c(2, 1))
 steps_weekday_df = steps_df[steps_df$weekday == "Weekday", ]
 steps_by_interval_weekday = aggregate(steps_weekday_df$steps ~ steps_weekday_df$interval, 
     data = steps_weekday_df, sum)
-plot(steps_by_interval_weekday, type = "l", main = "Weekday")
+plot(steps_by_interval_weekday, type = "l", main = "Weekday", ylab = "Steps", 
+    xlab = "", col = "blue")
 
 steps_weekend_df = steps_df[steps_df$weekday == "Weekend", ]
 steps_by_interval_weekend = aggregate(steps_weekend_df$steps ~ steps_weekend_df$interval, 
     data = steps_weekend_df, sum)
-plot(steps_by_interval_weekend, type = "l", main = "Weekend")
+plot(steps_by_interval_weekend, type = "l", main = "Weekend", ylab = "Steps", 
+    xlab = "", col = "blue")
 ```
 
 ![plot of chunk PlotWeekdayWeekend](figure/PlotWeekdayWeekend.png) 
